@@ -11,7 +11,7 @@ app = FastAPI(
 
 # Modelo dos dados recebidos ao criar uma tarefa
 class TarefaCreate(BaseModel):
-    titulo: str
+    titulo: str = Field(min_length=1, max_length=100)
     descricao: str | None = None
 
 
@@ -44,4 +44,23 @@ def criar_tarefa(tarefa: TarefaCreate):
     tarefas.append(nova_tarefa)
     proximo_id += 1
 
-    return nova_tarefa
+@app.put("/tarefas/{tarefa_id}")
+def atualizar_tarefa(tarefa_id: int, tarefa: TarefaCreate):
+    for i, t in enumerate(tarefas):
+        if t["id"] == tarefa_id:
+            tarefas[i] = {
+                "id": tarefa_id,
+                "titulo": tarefa.titulo,
+                "descricao": tarefa.descricao,
+                "concluida": t["concluida"],
+            }
+            return tarefas[i]
+    return {"error": "Tarefa não encontrada"}
+
+@app.delete("/tarefas/{tarefa_id}", status_code=204)
+def deletar_tarefa(tarefa_id: int):
+    for i, t in enumerate(tarefas):
+        if t["id"] == tarefa_id:
+            tarefas.pop(i)
+            return
+    return {"error": "Tarefa não encontrada"}
